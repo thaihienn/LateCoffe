@@ -38,7 +38,9 @@ public class Common {
     public static final String ORDER_REF = "Orders";
     public static final String NOTI_TITLE = "title";
     public static final String NOTI_CONTENT = "content";
+    public static final String SHIPPING_ORDER_REF = "ShippingOrder";
     private static final String TOKEN_REF = "Tokens";
+
 
     public static ShipperUserModel currentShipperUser;
 
@@ -70,7 +72,16 @@ public class Common {
         textView.setText(builder, TextView.BufferType.SPANNABLE);
     }
 
-
+    //Set Span String color
+    public static void setSpanStringColor(String welcome, String name, TextView textView, int color) {
+        SpannableStringBuilder builder = new SpannableStringBuilder();
+        builder.append(welcome);
+        SpannableString spannableString = new SpannableString(name);
+        StyleSpan boldSpan = new StyleSpan(Typeface.BOLD);
+        spannableString.setSpan(boldSpan, 0, name.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        builder.append(spannableString);
+        textView.setText(builder, TextView.BufferType.SPANNABLE);
+    }
 
 
     public static String buildToken(String authorizeKey) {
