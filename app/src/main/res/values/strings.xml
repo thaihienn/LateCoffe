@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">LateCoffeeShipper</string>
+    <string name="app_name">LateCoffee: Shipper</string>
     <string name="msg_fill_info">Please fill infomation</string>
     <string name="btn_cancel">CANCEL</string>
     <string name="btn_register">REGISTER</string>

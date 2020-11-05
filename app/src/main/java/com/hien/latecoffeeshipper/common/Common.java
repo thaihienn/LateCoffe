@@ -28,7 +28,7 @@ import java.math.RoundingMode;
 import java.text.DecimalFormat;
 
 public class Common {
-    public static final String SHIPPER_REF = "Shipper";
+    public static final String SHIPPER_REF = "Shippers";
     public static final String POPULAR_CATEGORY_REF = "MostPopular";
     public static final String BEST_DEALS_REF = "BestDeals";
     public static final int DEFAULT_COLUMN_COUNT = 0;

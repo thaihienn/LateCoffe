@@ -1,14 +1,13 @@
 package com.hien.latecoffeeshipper.model;
 
 public class ShippingOderModel {
-    private String shipperPhone,shipperName;
-    private double currentLat,currentLng;
+    private String shipperPhone, shipperName;
+    private double currentLat, currentLng;
     private OrderModel orderModel;
     private boolean isStartTrip;
 
-public ShippingOderModel(){
-
-}
+    public ShippingOderModel() {
+    }
 
     public String getShipperPhone() {
         return shipperPhone;
