@@ -1,6 +1,7 @@
 package com.hien.latecoffeeshipper.addapter;
 
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Color;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -13,7 +14,9 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 import com.google.android.material.button.MaterialButton;
+import com.google.gson.Gson;
 import com.hien.latecoffeeshipper.R;
+import com.hien.latecoffeeshipper.ShippingActivity;
 import com.hien.latecoffeeshipper.common.Common;
 import com.hien.latecoffeeshipper.model.ShippingOderModel;
 
@@ -24,6 +27,7 @@ import java.util.List;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.Unbinder;
+import io.paperdb.Paper;
 
 public class MyShippingOderAdapter extends RecyclerView.Adapter<MyShippingOderAdapter.MyViewHolder> {
 
@@ -35,6 +39,7 @@ public class MyShippingOderAdapter extends RecyclerView.Adapter<MyShippingOderAd
         this.context = context;
         this.shippingOderModelList = shippingOderModelList;
         simpleDateFormat =new SimpleDateFormat("dd-mm-yyyy HH:mm:ss");
+        Paper.init(context);
     }
 
     @NonNull
@@ -67,6 +72,18 @@ public class MyShippingOderAdapter extends RecyclerView.Adapter<MyShippingOderAd
         if (shippingOderModelList.get(position).isStartTrip()){
             holder.btn_ship.setEnabled(false);
         }
+
+        //onclick
+        holder.btn_ship.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Paper.book().write(Common.SHIPPING_ORDER_DATA,new Gson().toJson(shippingOderModelList.get(position)));
+                context.startActivity(new Intent(context, ShippingActivity.class));
+            }
+        });
+
+
+
     }
 
     @Override
