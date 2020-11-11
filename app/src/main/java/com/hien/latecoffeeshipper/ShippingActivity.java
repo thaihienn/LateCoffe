@@ -12,6 +12,7 @@ import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
+import android.location.Location;
 import android.os.Bundle;
 import android.os.Looper;
 import android.text.TextUtils;
@@ -42,6 +43,8 @@ import com.google.android.material.button.MaterialButton;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.hien.latecoffeeshipper.common.Common;
+import com.hien.latecoffeeshipper.common.LatLngInterpolator;
+import com.hien.latecoffeeshipper.common.MarkerAnimation;
 import com.hien.latecoffeeshipper.model.ShippingOderModel;
 import com.karumi.dexter.Dexter;
 import com.karumi.dexter.PermissionToken;
@@ -82,6 +85,8 @@ public class ShippingActivity extends FragmentActivity implements OnMapReadyCall
     @BindView(R.id.img_food_image)
     ImageView img_food_image;
 
+    private boolean isInit = false;
+    private Location previousLocation = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -108,7 +113,7 @@ public class ShippingActivity extends FragmentActivity implements OnMapReadyCall
                                 .findFragmentById(R.id.map);
                         mapFragment.getMapAsync(ShippingActivity.this::onMapReady);
                         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(ShippingActivity.this);
-                        fusedLocationProviderClient.requestLocationUpdates(locationRequest,locationCallback,Looper.myLooper());
+                        fusedLocationProviderClient.requestLocationUpdates(locationRequest, locationCallback, Looper.myLooper());
                     }
 
                     @Override
@@ -123,25 +128,23 @@ public class ShippingActivity extends FragmentActivity implements OnMapReadyCall
                 }).check();
 
 
-
     }
 
     private void setShippingOrder() {
         Paper.init(this);
-        String data= Paper.book().read(Common.SHIPPING_ORDER_DATA);
-        if (!TextUtils.isEmpty(data))
-        {
+        String data = Paper.book().read(Common.SHIPPING_ORDER_DATA);
+        if (!TextUtils.isEmpty(data)) {
             shippingOderModel = new Gson()
-                    .fromJson(data,new TypeToken<ShippingOderModel>(){}.getType());
-            if (shippingOderModel!=null)
-            {
+                    .fromJson(data, new TypeToken<ShippingOderModel>() {
+                    }.getType());
+            if (shippingOderModel != null) {
                 Common.setSpanStringColor("Name: ",
                         shippingOderModel.getOrderModel().getUserName(),
                         txt_name,
                         Color.parseColor("#333639"));
                 txt_date.setText(new StringBuilder()
                         .append(new SimpleDateFormat("dd-MM-yyyy HH:mm:ss")
-                        .format(shippingOderModel.getOrderModel().getCreateDate())));
+                                .format(shippingOderModel.getOrderModel().getCreateDate())));
                 Common.setSpanStringColor("No: ",
                         shippingOderModel.getOrderModel().getKey(),
                         txt_order_number,
@@ -152,45 +155,55 @@ public class ShippingActivity extends FragmentActivity implements OnMapReadyCall
                         Color.parseColor("#795548"));
                 Glide.with(this)
                         .load(shippingOderModel.getOrderModel().getCartItemList().get(0)
-                        .getFoodImage())
+                                .getFoodImage())
                         .into(img_food_image);
 
             }
-        }else {
+        } else {
             Toast.makeText(this, "Shipping Order Is NUll", Toast.LENGTH_SHORT).show();
         }
     }
 
     private void buildLocationCallBack() {
-        locationCallback=new LocationCallback(){
+        locationCallback = new LocationCallback() {
             @Override
             public void onLocationResult(LocationResult locationResult) {
                 super.onLocationResult(locationResult);
                 // Add a marker in Sydney and move the camera
                 LatLng locationShipper = new LatLng(locationResult.getLastLocation().getLatitude(), locationResult.getLastLocation().getLongitude());
-                if (ShipperMarker==null){
-                    int hieght,width;
+                if (ShipperMarker == null) {
+                    int hieght, width;
 
-                    hieght=width =80;
-                    BitmapDrawable bitmapDrawable= (BitmapDrawable) ContextCompat
+                    hieght = width = 80;
+                    BitmapDrawable bitmapDrawable = (BitmapDrawable) ContextCompat
                             .getDrawable(ShippingActivity.this, R.drawable.shipper);
-                    Bitmap resized  = Bitmap.createScaledBitmap(bitmapDrawable.getBitmap(),width,hieght,false);
-                    ShipperMarker =   mMap.addMarker(new MarkerOptions()
+                    Bitmap resized = Bitmap.createScaledBitmap(bitmapDrawable.getBitmap(), width, hieght, false);
+                    ShipperMarker = mMap.addMarker(new MarkerOptions()
                             .icon(BitmapDescriptorFactory.fromBitmap(resized))
                             .position(locationShipper).title("You"));
-                }
-                else {
+                    mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(locationShipper, 15));
+                } else {
                     ShipperMarker.setPosition(locationShipper);
                 }
 
-
-                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(locationShipper,15));
+                if (isInit && previousLocation != null) {
+                    LatLng previousLocationLatLng = new LatLng(previousLocation.getLatitude(),
+                            previousLocation.getLongitude());
+                    MarkerAnimation.animateMarkerToGB(ShipperMarker, locationShipper, new LatLngInterpolator.Spherical());
+                    ShipperMarker.setRotation(Common.setBearing(locationShipper, previousLocationLatLng));
+                    mMap.animateCamera(CameraUpdateFactory.newLatLng(locationShipper));
+                    previousLocation=locationResult.getLastLocation();
+                }
+                if (!isInit){
+                    isInit=true;
+                    previousLocation=locationResult.getLastLocation();
+                }
             }
         };
     }
 
     private void buildLocationRequest() {
-        locationRequest=new LocationRequest();
+        locationRequest = new LocationRequest();
         locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
         locationRequest.setInterval(15000); //15s
         locationRequest.setFastestInterval(10000);//10s
@@ -211,18 +224,18 @@ public class ShippingActivity extends FragmentActivity implements OnMapReadyCall
         mMap = googleMap;
         mMap.getUiSettings().setZoomControlsEnabled(true);
         try {
-boolean success =googleMap.setMapStyle(MapStyleOptions.loadRawResourceStyle(this,
-        R.raw.uber_light_with_label));
-if (!success)
-    Log.e("err","Style parsing Failed");
-        }catch (Resources.NotFoundException ex){
-            Log.e("err","Style not Found");
+            boolean success = googleMap.setMapStyle(MapStyleOptions.loadRawResourceStyle(this,
+                    R.raw.uber_light_with_label));
+            if (!success)
+                Log.e("err", "Style parsing Failed");
+        } catch (Resources.NotFoundException ex) {
+            Log.e("err", "Style not Found");
         }
 
     }
 
     @Override
-    protected void onDestroy()  {
+    protected void onDestroy() {
         fusedLocationProviderClient.removeLocationUpdates(locationCallback);
         super.onDestroy();
     }

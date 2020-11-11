@@ -19,6 +19,7 @@ import android.widget.Toast;
 
 import androidx.core.app.NotificationCompat;
 
+import com.google.android.gms.maps.model.LatLng;
 import com.google.firebase.database.FirebaseDatabase;
 import com.hien.latecoffeeshipper.R;
 import com.hien.latecoffeeshipper.model.ShipperUserModel;
@@ -152,13 +153,29 @@ public class Common {
 
     }
 
-    public static void updateToken(Context context, String newToken,boolean isServer,boolean isShipper) {
+    public static void updateToken(Context context, String newToken, boolean isServer, boolean isShipper) {
         FirebaseDatabase.getInstance()
                 .getReference(Common.TOKEN_REF)
                 .child(Common.currentShipperUser.getUid())
-                .setValue(new TokenModel(Common.currentShipperUser.getPhone(), newToken, isServer,isShipper))
+                .setValue(new TokenModel(Common.currentShipperUser.getPhone(), newToken, isServer, isShipper))
                 .addOnFailureListener(e -> {
                     Toast.makeText(context, "" + e.getMessage(), Toast.LENGTH_SHORT).show();
                 });
+    }
+
+    public static float setBearing(LatLng begin, LatLng end) {
+        double lat = Math.abs(begin.latitude - end.longitude);
+        double lng = Math.abs(begin.longitude - end.longitude);
+
+        if (begin.latitude < end.latitude && begin.longitude < end.longitude) {
+            return (float) (Math.toDegrees(Math.atan(lng / lat)));
+        } else if (begin.latitude >= end.latitude && begin.longitude < end.longitude) {
+            return (float) ((90 - Math.toDegrees(Math.atan(lng / lat))) + 90);
+        } else if (begin.latitude >= end.latitude && begin.longitude >= end.longitude) {
+            return (float) (Math.toDegrees(Math.atan(lng / lat))+180);
+        }else if (begin.latitude > end.latitude && begin.longitude >= end.longitude) {
+            return (float) ((90 - Math.toDegrees(Math.atan(lng / lat))) + 270);
+        }
+        return -1;
     }
 }
